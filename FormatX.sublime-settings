@@ -1,0 +1,6 @@
+{
+  "langs": {
+    "source.go": ["~/Documents/Go/bin/goimports"],
+    "source.c": ["/usr/local/bin/clang-format", "--assume-filename=/Users/cj/test.c"],
+  },
+}
