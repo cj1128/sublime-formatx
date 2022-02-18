@@ -1,8 +1,5 @@
 import os
-import platform
-import re
 import subprocess
-import traceback
 import sublime
 import sublime_plugin
 
@@ -26,6 +23,7 @@ def run_cmd(_cmd, stdin):
     stdin=subprocess.PIPE,
     stderr=subprocess.PIPE,
     stdout=subprocess.PIPE,
+    cwd=os.path.expanduser("~/Desktop/Lab/yarn-lab"),
   )
 
   if isinstance(stdin, str):
@@ -46,13 +44,27 @@ def format(view, edit):
   stdout, stderr, code = run_cmd(cmd, code)
 
   if code != 0:
-    # TODO
-    print("error!", stderr)
+    msg = ""
+    try:
+      stdoutstr = stdout.decode("utf8").strip()
+      if stdoutstr != "":
+        msg = stdoutstr.split("\n")[0]
+      else:
+        stderrstr = stderr.decode("utf8").strip()
+        msg = stderrstr.split("\n")[0]
+    except:
+      msg = "failed to format"
+
+    view.window().status_message("FormatX: %s" % msg)
     return
 
-  view.replace(edit, region, stdout.decode("utf8"))
+  try:
+    stdoutstr = stdout.decode("utf8")
+    view.replace(edit, region, stdout.decode("utf8"))
+  except:
+    view.window().status_message("FormatX: output is not valid utf8")
 
-class FormatX(sublime_plugin.TextCommand):
+class FormatxFormat(sublime_plugin.TextCommand):
   def is_enabled(self):
     scope = self.view.syntax().scope
     cmd = get_command(scope)
