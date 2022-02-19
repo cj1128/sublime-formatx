@@ -3,10 +3,13 @@ import subprocess
 import sublime
 import sublime_plugin
 
-settings = sublime.load_settings("FormatX.sublime-settings")
+
+def get_setting(key):
+  settings = sublime.load_settings("FormatX.sublime-settings")
+  return settings.get(key)
 
 def get_command(scope):
-  langs = settings.get("langs")
+  langs = get_setting("scope")
 
   if isinstance(langs, dict):
     return langs.get(scope)
@@ -14,16 +17,21 @@ def get_command(scope):
   return None
 
 # cmd: command arrya, e.g. ['goimports']
-def run_cmd(_cmd, stdin):
-  # replace `~`
-  cmd = [os.path.expanduser(part) for part in _cmd]
+def run_cmd(_cmd, stdin, path):
+  def replace(part):
+    if part == "$file":
+      return path
+
+    # replace `~`
+    return os.path.expanduser(part)
+
+  cmd = [replace(part) for part in _cmd]
 
   proc = subprocess.Popen(
     cmd,
     stdin=subprocess.PIPE,
     stderr=subprocess.PIPE,
     stdout=subprocess.PIPE,
-    cwd=os.path.expanduser("~/Desktop/Lab/yarn-lab"),
   )
 
   if isinstance(stdin, str):
@@ -41,7 +49,7 @@ def format(view, edit):
 
   region = sublime.Region(0, view.size())
   code = view.substr(region)
-  stdout, stderr, code = run_cmd(cmd, code)
+  stdout, stderr, code = run_cmd(cmd, code, view.file_name())
 
   if code != 0:
     msg = ""
@@ -73,3 +81,14 @@ class FormatxFormat(sublime_plugin.TextCommand):
   def run(self, edit):
     format(self.view, edit)
 
+class FormatxListener(sublime_plugin.EventListener):
+    def on_pre_save(self, view):
+      name = view.file_name()
+
+      if name is None:
+        return
+
+      dirs = [os.path.expanduser(dir) for dir in (get_setting("auto_format_dirs") or [])]
+
+      if any([name.startswith(dir) for dir in dirs]):
+        view.run_command('formatx_format')

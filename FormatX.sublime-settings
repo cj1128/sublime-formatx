@@ -1,8 +1,2 @@
 {
-  "langs": {
-    "source.go": ["~/Documents/Go/bin/goimports"],
-    "source.c": ["/usr/local/bin/clang-format", "--assume-filename=/Users/cj/test.c"],
-    "source.js": ["~/.fnm/aliases/default/bin/prettier_d_slim", "--stdin", "--stdin-filepath=a.js"],
-    "source.ts": ["~/.fnm/aliases/default/bin/prettier_d_slim", "--stdin", "--stdin-filepath=a.js"],
-  },
 }
